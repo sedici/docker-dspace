@@ -1,0 +1,72 @@
+FROM maven:3-jdk-8-alpine
+
+ARG DSPACE_HOME=/dspace
+
+ENV DSPACE_GIT_URL=https://github.com/DSpace/DSpace
+ENV DSPACE_GIT_REVISION=dspace-6.0
+ENV DSPACE_WEBAPPS="xmlui mirage2 oai"
+
+WORKDIR ${DSPACE_HOME}-src
+RUN apk -U add git
+# RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y git 
+#postgresql-client
+RUN git clone --depth 1 --branch ${DSPACE_GIT_REVISION} ${DSPACE_GIT_URL} .
+
+ADD tmp/m2/ /root/.m2/
+#TODO compilar solo los profiles necesarios segun DSPACE_WEBAPPS
+#		[[ $DSPACE_WEBAPPS != *"jspui"* ]] && MAVEN_OPTS="$MAVEN_manOPTS -P-dspace-jspui"
+#		[[ $DSPACE_WEBAPPS != *"xmlui"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui"
+#		# if mirage2 is enabled use mirage2 settings, else disable mirage2 profile#
+#		[[ $DSPACE_WEBAPPS = *"mirage2"* ]] && MAVEN_OPTS="$MAVEN_OPTS -Dmirage2.on=true -Dmirage2.deps.included=true" || MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui-mirage2"
+#		[[ $DSPACE_WEBAPPS != *"sword"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-sword"
+#		[[ $DSPACE_WEBAPPS != *"swordv2"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-swordv2"
+#		[[ $DSPACE_WEBAPPS != *"rdf"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-rdf"
+#		[[ $DSPACE_WEBAPPS != *"rest"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-rest"
+#		[[ $DSPACE_WEBAPPS != *"oai"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-oai"
+ENV MAVEN_OPTS "-Djava.awt.headless=true"
+
+RUN echo "Building and packaging DSpace, usually it takes a couple of minutes, but if it is the first time you build this image, it may take a lot moreas it will download all dependencies. " && \
+	mvn $MAVEN_OPTS package 
+	#> /dev/null
+
+#####################
+# -----------------------------------------------------------
+FROM tomcat:8.5
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+ENV POSTGRES_DB_HOST "postgres"
+ENV POSTGRES_DB_PORT "5432"
+ENV POSTGRES_DB_NAME "dspace"
+ENV POSTGRES_DB_USER "dspace"
+ENV POSTGRES_DB_PASS "dspace"
+
+ENV DSPACE_BASE=${DSPACE_BASE:-/dspace}
+
+ENV PATH=${CATALINA_HOME}/bin:${DSPACE_BASE}/install/bin:$PATH \
+	CATALINA_OPTS="-Xmx512M -Dfile.encoding=UTF-8"
+
+RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak && \
+	echo 'deb http://debian.unnoba.edu.ar/debian/ stretch contrib main non-free' | cat - /etc/apt/sources.list.bak > /etc/apt/sources.list
+
+RUN apt update 
+#&& apt-get -y upgrade
+RUN apt-get install -y --no-install-recommends postgresql-client nano less \
+	ghostscript ant ant-contrib unattended-upgrades && \
+	apt autoremove -y && apt clean
+
+COPY --from=0 ${DSPACE_HOME}-src/dspace/target/dspace-installer ${DSPACE_HOME}-inst
+
+WORKDIR ${DSPACE_HOME}-inst
+
+#set up tomcat
+RUN rm -rf $CATALINA_HOME/webapps/* 
+
+# Install root filesystem
+COPY build/rootfs /
+
+VOLUME ${DSPACE_HOME}
+EXPOSE 8080
+CMD ["start"]
+ENTRYPOINT ["dspace-manager.sh"]
+#log rotate?

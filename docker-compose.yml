@@ -1,0 +1,31 @@
+version: "3"
+services:
+  db:
+    container_name: dspace_db
+    image: postgres:9.5-alpine
+    environment:
+      POSTGRES_DB: "dspace"
+      POSTGRES_USER: "dspace"
+      POSTGRES_PASSWORD: "dspace"
+    volumes:
+      - /var/lib/postgresql/data
+  dspace:
+    container_name: dspace
+    image: dspace:latest
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: start
+    environment:
+      CATALINA_OPTS: "-Xmx1024m -Xms512m -XX:MaxPermSize=256m"
+      DSPACE_GIT_URL: "https://github.com/DSpace/DSpace"
+      DSPACE_GIT_REVISION: "dspace-6.2"
+      DSPACE_WEBAPPS: "xmlui" # posible values: "jspui xmlui  mirage2 rest oai rdf sword swordv2"
+      DSPACE_ROOT_WEBAPP: "xmlui"
+    volumes:
+      - ./data/:/dspace/
+      - ~/.m2/:/root/.m2/
+    ports:
+      - "9090:8080"
+    depends_on: 
+      - db

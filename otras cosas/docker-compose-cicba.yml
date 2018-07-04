@@ -1,0 +1,9 @@
+version: "3"
+services:
+  dspace:
+    environment:
+      DSPACE_GIT_URL: "https://github.com/CICBA/DSpace"
+      DSPACE_GIT_REVISION: "dspace-6.2"
+      DSPACE_WEBAPPS: "xmlui oai sword"
+    volumes:
+      - ./m2-settings.xml:/root/.m2/settings.xml

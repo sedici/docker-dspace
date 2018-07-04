@@ -1,0 +1,66 @@
+# NAME:     arieljlira/dspace
+FROM tomcat:8.5-jre8-slim
+
+LABEL maintainer "alira@sedici.unlp.edu.ar"
+
+# DEBIAN_FRONTEND can be set during build but not in ENV (https://github.com/moby/moby/issues/4032)
+ARG DEBIAN_FRONTEND=noninteractive
+
+# TODO revisar si estos ENVs de postgres tienen que estar en el dockerfile o no
+ENV POSTGRES_DB_HOST "dspace_db"
+ENV POSTGRES_DB_PORT "5432"
+ENV POSTGRES_DB_NAME "dspace"
+ENV POSTGRES_DB_USER "dspace"
+ENV POSTGRES_DB_PASS "dspace"
+
+ENV DSPACE_GIT_URL=https://github.com/DSpace/DSpace
+ENV DSPACE_GIT_REVISION=dspace-6.3
+ENV DSPACE_WEBAPPS="jspui xmlui mirage2 rest oai rdf sword swordv2"
+ENV DSPACE_ROOT_WEBAPP=""
+
+#quizás DSPACE_BASE deba ir a bashrc para no ser customizable 
+ENV DSPACE_BASE=/dspace
+ENV PATH=${CATALINA_HOME}/bin:${DSPACE_BASE}/install/bin:$PATH \
+	CATALINA_OPTS="-Xmx512M -Dfile.encoding=UTF-8"
+
+RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak && \
+	echo 'deb http://mirrors.dcarsat.com.ar/debian/ stretch contrib main non-free' | cat - /etc/apt/sources.list.bak > /etc/apt/sources.list
+
+#workaround for slim issue https://github.com/debuerreotype/debuerreotype/issues/10
+#workaround for https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=866729
+RUN mkdir -p /usr/share/man/man1 /usr/share/man/man7
+
+RUN apt-get update && apt-get -y upgrade
+RUN apt-get install -y --no-install-recommends  git openjdk-8-jdk ant maven postgresql-client  
+	#imagemagick ghostscript \
+	#net-tools bash-completion mlocate nano less procps apt-utils \
+	#apache2 
+RUN apt-get autoremove -y && apt-get clean
+
+WORKDIR ${DSPACE_BASE}
+
+#set up tomcat
+RUN rm -rf $CATALINA_HOME/webapps/* 
+
+# Install root filesystem
+COPY rootfs /
+
+RUN echo "Debian GNU/Linux `cat /etc/debian_version` image. (`uname -rsv`)" >> /root/.built \
+    && echo "- with `java -version 2>&1 | awk 'NR == 2'`" >> /root/.built \
+    && echo "\nNote: if you need to run commands interacting with DSpace enter the" >> /root/.built \
+    && echo "container with: docker exec -it dspace /bin/bash" >> /root/.built
+
+VOLUME $DSPACE_BASE/.m2/
+VOLUME ${DSPACE_BASE}
+
+EXPOSE 8080
+CMD ["start"]
+ENTRYPOINT ["dspace-manager.sh"]
+
+# 
+# ARG DSPACE_USER
+# DSPACE_USER=${DSPACE_USER:-dspace} \
+# RUN useradd --home-dir $DSPACE_BASE --create-home --shell /bin/bash $DSPACE_USER   
+# RUN chown -R $DSPACE_USER.$DSPACE_USER $CATALINA_HOME
+# RUN chown -R $DSPACE_USER.$DSPACE_USER $DSPACE_BASE
+# USER $DSPACE_USER
