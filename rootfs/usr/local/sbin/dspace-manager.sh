@@ -112,6 +112,28 @@ enable_pg_crypto()
 		fi
 }
 
+restore_db () {
+	print_info 'Searching for dump files...'
+	if [ -f /postgres/$DATABASE_DUMP_FILE ]
+    then
+    	print_info 'Dump file found! Restoring database...'
+
+    	export PGUSER="${POSTGRES_DB_USER}"
+        export PGPASSWORD="${POSTGRES_DB_PASS}"
+        psql -h ${POSTGRES_DB_HOST} -p ${POSTGRES_DB_PORT} -d ${POSTGRES_DB_NAME} -U ${POSTGRES_DB_USER} -f /postgres/$DATABASE_DUMP_FILE
+
+        if [[ ! $? -eq 0 ]]; then
+            print_err "PSQL connection error: Cannot restore database"
+        fi
+
+    	unset PGPASSWORD
+        unset PGUSER
+    else
+    	print_info 'Dump file not found, database will not be restored'
+    fi
+
+}
+
 #########################################################
 #########################################################
 
@@ -161,6 +183,13 @@ init_config() {
 	set_dspace_property "db.cleanDisabled" "false" $cfg_file
 }
 
+reset_db (){
+    dspace database clean
+    restore_db
+    if [ ! -f /postgres/$DATABASE_DUMP_FILE ]; then    	
+        dspace database migrate
+    fi
+}
 
 truncate_all (){
 	
@@ -168,8 +197,6 @@ truncate_all (){
 	if ( confirm "Esta por borrar el directorio de instalación de dspace $DSPACE_DIR y la base de datos, está seguro que desea hacerlo? [Y/n]" ); then
 		print_info "Hago el clean y migrate de la BD para limpiarla. Si falla al crear el admin es porque el migrate no esta creando el group admin"
 		dspace database clean
-		enable_pg_crypto
-		dspace database migrate
 
 		rm -rf $DSPACE_DIR/*
 	else
@@ -264,7 +291,9 @@ install (){
 
 	# $TOMCAT stop &> /dev/null
 	rebuild_installer
+
 	enable_pg_crypto
+    restore_db
 
 	cd $DSPACE_SOURCE/dspace/target/dspace-installer
 	ant fresh_install
@@ -298,6 +327,7 @@ usage() {
 		echo "     - update"
 		echo "     - update-fast: build inside dspace dir (compiles only customizations)"
 		echo "     - start"
+		echo "     - reset-db"
 		exit 1
 }
 
@@ -337,6 +367,9 @@ case "$1" in
         ;;
   	update-fast)
 		update fast
+        ;;
+    reset-db)
+        reset_db    
         ;;
   	*)
         usage
