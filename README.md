@@ -7,10 +7,11 @@
 
 ## Installation
 1. > git clone https://github.com/sedici/dspace-docker/
-2. > docker-compose build .
-3. > docker-compose run dspace install
-4. > docker-compose up
-5. Access http://localhost:9090/
+2. > cd dspace-docker
+3. > docker-compose build
+4. > docker-compose run dspace install
+5. > docker-compose up
+6. Access http://localhost:9090/
 
 ## Making changes in dev
 1. change ```data/sources/*``` as desired
