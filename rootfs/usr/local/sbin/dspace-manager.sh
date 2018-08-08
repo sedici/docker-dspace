@@ -68,13 +68,14 @@ set_dspace_property (){
 
 # executes a given command in postgres using context credentials 
 # @param 1 (required) command
+# @param 2 (optional) in case more parameters are added
 # @returns psql return code
 run_pg(){
 
         export PGUSER="${POSTGRES_DB_USER}"
         export PGPASSWORD="${POSTGRES_DB_PASS}"
-
-    	psql -h ${POSTGRES_DB_HOST} -p ${POSTGRES_DB_PORT} -d ${POSTGRES_DB_NAME} -c "${1}"
+        extra_params=${2}
+        psql -h ${POSTGRES_DB_HOST} -p ${POSTGRES_DB_PORT} -d ${POSTGRES_DB_NAME} -c "${1}" ${extra_params}
 
 		result=$?
         unset PGPASSWORD
@@ -114,22 +115,11 @@ enable_pg_crypto()
 
 restore_db () {
 	print_info 'Searching for dump files...'
-	if [ -f /postgres/$DATABASE_DUMP_FILE ]
-    then
-    	print_info 'Dump file found! Restoring database...'
-
-    	export PGUSER="${POSTGRES_DB_USER}"
-        export PGPASSWORD="${POSTGRES_DB_PASS}"
-        psql -h ${POSTGRES_DB_HOST} -p ${POSTGRES_DB_PORT} -d ${POSTGRES_DB_NAME} -U ${POSTGRES_DB_USER} -f /postgres/$DATABASE_DUMP_FILE
-
+	if [ -f $BOOTSTRAP_DUMP ]; then
+        run_pg "" "-f $BOOTSTRAP_DUMP"
         if [[ ! $? -eq 0 ]]; then
             print_err "PSQL connection error: Cannot restore database"
         fi
-
-    	unset PGPASSWORD
-        unset PGUSER
-    else
-    	print_info 'Dump file not found, database will not be restored'
     fi
 
 }
@@ -185,9 +175,11 @@ init_config() {
 
 reset_db (){
     dspace database clean
-    restore_db
-    if [ ! -f /postgres/$DATABASE_DUMP_FILE ]; then    	
+
+    if [ ! -f $BOOTSTRAP_DUMP ]; then
         dspace database migrate
+    else
+        restore_db
     fi
 }
 

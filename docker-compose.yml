@@ -22,11 +22,9 @@ services:
       DSPACE_GIT_REVISION: "dspace-6.2"
       DSPACE_WEBAPPS: "xmlui" # posible values: "jspui xmlui  mirage2 rest oai rdf sword swordv2"
       DSPACE_ROOT_WEBAPP: "xmlui"
-      DATABASE_DUMP_FILE: "dspace_cic"
     volumes:
       - ./data/:/dspace/
       - ~/.m2/:/root/.m2/
-      - ./database-dump:/postgres
     ports:
       - "9090:8080"
     depends_on: 
