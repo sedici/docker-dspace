@@ -11,7 +11,7 @@
 3. > docker-compose build
 4. > docker-compose run dspace install
 5. > docker-compose up
-6. Access http://localhost:9090/
+6. > Access http://localhost:9090/
 
 ## Making changes in dev
 1. change ```data/sources/*``` as desired
