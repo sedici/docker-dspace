@@ -1,0 +1,9 @@
+version: "3"
+services:
+  dspace:
+    command: start --debug
+    environment:
+      JPDA_ADDRESS: "8000"
+    ports:
+      - "8000:8000"
+#

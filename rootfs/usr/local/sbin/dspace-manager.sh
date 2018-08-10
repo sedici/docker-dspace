@@ -263,8 +263,11 @@ start () {
 	test_db_connection
 
 	enable_webapps
-
-	$TOMCAT run
+    if [ "$1" = "--debug" ]; then
+        $TOMCAT jpda run
+    else
+        $TOMCAT run
+    fi
 }
 
 install (){
@@ -319,6 +322,7 @@ usage() {
 		echo "     - update"
 		echo "     - update-fast: build inside dspace dir (compiles only customizations)"
 		echo "     - start"
+		echo "     - start --debug: enable remote debug mode"
 		echo "     - reset-db"
 		exit 1
 }
@@ -345,7 +349,11 @@ cd $DSPACE_BASE
 init_env
 case "$1" in
   	start)
-		start
+        if [ "$2" = "--debug" ]; then
+           start "--debug"
+        else
+           start
+        fi
 		just_wait
 		;;
 	# init_sources)
