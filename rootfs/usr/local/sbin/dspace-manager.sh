@@ -68,13 +68,14 @@ set_dspace_property (){
 
 # executes a given command in postgres using context credentials 
 # @param 1 (required) command
+# @param 2 (optional) in case more parameters are added
 # @returns psql return code
 run_pg(){
 
         export PGUSER="${POSTGRES_DB_USER}"
         export PGPASSWORD="${POSTGRES_DB_PASS}"
-
-    	psql -h ${POSTGRES_DB_HOST} -p ${POSTGRES_DB_PORT} -d ${POSTGRES_DB_NAME} -c "${1}"
+        extra_params=${2}
+        psql -h ${POSTGRES_DB_HOST} -p ${POSTGRES_DB_PORT} -d ${POSTGRES_DB_NAME} -c "${1}" ${extra_params}
 
 		result=$?
         unset PGPASSWORD
@@ -110,6 +111,17 @@ enable_pg_crypto()
         else
 			print_info "OK pgcrypto extension is available"
 		fi
+}
+
+restore_db () {
+	print_info 'Searching for dump files...'
+	if [ -f $BOOTSTRAP_DUMP ]; then
+        run_pg "" "-f $BOOTSTRAP_DUMP"
+        if [[ ! $? -eq 0 ]]; then
+            print_err "PSQL connection error: Cannot restore database"
+        fi
+    fi
+
 }
 
 #########################################################
@@ -161,6 +173,15 @@ init_config() {
 	set_dspace_property "db.cleanDisabled" "false" $cfg_file
 }
 
+reset_db (){
+    dspace database clean
+
+    if [ ! -f $BOOTSTRAP_DUMP ]; then
+        dspace database migrate
+    else
+        restore_db
+    fi
+}
 
 truncate_all (){
 	
@@ -168,8 +189,6 @@ truncate_all (){
 	if ( confirm "Esta por borrar el directorio de instalación de dspace $DSPACE_DIR y la base de datos, está seguro que desea hacerlo? [Y/n]" ); then
 		print_info "Hago el clean y migrate de la BD para limpiarla. Si falla al crear el admin es porque el migrate no esta creando el group admin"
 		dspace database clean
-		enable_pg_crypto
-		dspace database migrate
 
 		rm -rf $DSPACE_DIR/*
 	else
@@ -267,7 +286,9 @@ install (){
 
 	# $TOMCAT stop &> /dev/null
 	rebuild_installer
+
 	enable_pg_crypto
+    restore_db
 
 	cd $DSPACE_SOURCE/dspace/target/dspace-installer
 	ant fresh_install
@@ -302,6 +323,7 @@ usage() {
 		echo "     - update-fast: build inside dspace dir (compiles only customizations)"
 		echo "     - start"
 		echo "     - start --debug: enable remote debug mode"
+		echo "     - reset-db"
 		exit 1
 }
 
@@ -345,6 +367,9 @@ case "$1" in
         ;;
   	update-fast)
 		update fast
+        ;;
+    reset-db)
+        reset_db    
         ;;
   	*)
         usage
