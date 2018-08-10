@@ -23,6 +23,8 @@ ENV DSPACE_BASE=/dspace
 ENV PATH=${CATALINA_HOME}/bin:${DSPACE_BASE}/install/bin:$PATH \
 	CATALINA_OPTS="-Xmx512M -Dfile.encoding=UTF-8"
 
+ENV BOOTSTRAP_DUMP "${DSPACE_BASE}/bootstrap-dump.sql"
+
 RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak && \
 	echo 'deb http://mirrors.dcarsat.com.ar/debian/ stretch contrib main non-free' | cat - /etc/apt/sources.list.bak > /etc/apt/sources.list
 
