@@ -24,7 +24,7 @@ By default only xmlui webapp is installed. You can change it in docker-compose.y
 
 ## Populate database
 You can copy a dump file into ```data``` directory before or after running 
-```docker-compose run dspace install```, if ```data``` directory doesn't exist, create it
+```docker-compose run dspace install```, if ```data``` directory doesn't exist, create it. The dump filename must be **bootstrap-dump.sql**, otherwise, modify the enviroment variable **$BOOTSTRAP_DUMP** at Dockerfile using other filename.
 
 If you copy it before running the install command then the database will be populated automatically from your dump file, otherwise you must run 
 ```docker-compose run dspace reset-db```
