@@ -1,6 +1,7 @@
 version: "3"
 services:
   dspace:
+    image: dspace:cicba
     environment:
       DSPACE_GIT_URL: "https://github.com/CICBA/DSpace"
       DSPACE_GIT_REVISION: "master"
