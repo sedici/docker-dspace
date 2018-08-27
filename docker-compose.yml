@@ -11,7 +11,7 @@ services:
       - /var/lib/postgresql/data
   dspace:
     container_name: dspace
-    image: dspace:latest
+    image: dspace:dspace-5.8
     build:
       context: ./
       dockerfile: Dockerfile
@@ -19,13 +19,13 @@ services:
     environment:
       CATALINA_OPTS: "-Xmx1024m -Xms512m -XX:MaxPermSize=256m"
       DSPACE_GIT_URL: "https://github.com/DSpace/DSpace"
-      DSPACE_GIT_REVISION: "dspace-6.2"
+      DSPACE_GIT_REVISION: "dspace-5.8"
       DSPACE_WEBAPPS: "xmlui" # posible values: "jspui xmlui  mirage2 rest oai rdf sword swordv2"
       DSPACE_ROOT_WEBAPP: "xmlui"
     volumes:
-      - ./data/:/dspace/
+      - ./data/dspace-5/:/dspace/
       - ~/.m2/:/root/.m2/
     ports:
       - "9090:8080"
-    depends_on: 
+    depends_on:
       - db

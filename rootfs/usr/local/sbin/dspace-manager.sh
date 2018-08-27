@@ -12,7 +12,7 @@ confirm() {
     local message=${1:-'Are you sure? [y/N]'}
 	# call with a prompt string or use a default
     read -r -p "$message" response
-	response=${response,,} 
+	response=${response,,}
     if [[ $response =~ ^(yes|y|Y) ]]; then
 		return 0
     else
@@ -36,7 +36,7 @@ print_info(){
 }
 
 # @param 1 (required) property name to look for
-# @param 2 (required) java properties file name 
+# @param 2 (required) java properties file name
 # @returns property value if found, null otherwise
 get_dspace_property () {
 	local cfg_file=${2}
@@ -45,16 +45,12 @@ get_dspace_property () {
 
 # add the property=value assignment in a java properties file or override it if already exists
 # @param 1 (required) property name
-# @param 2 (required) property value 
-# @param 3 (required) java properties  file name 
+# @param 2 (required) property value
+# @param 3 (required) java properties  file name
 set_dspace_property (){
 	local propval="${1} = ${2}"
 	local cfg_file=${3}
-	if [[ ! -f "$cfg_file" ]]; then
-		print_warn "El archivo ${cfg_file} no existe, no se puede continuar"
-		touch $cfg_file
 
-	fi
 	local oldval=$(get_dspace_property $1 $cfg_file)
 	if [ -z "${oldval}" ]; then
         echo $propval >> ${cfg_file}
@@ -66,7 +62,7 @@ set_dspace_property (){
 ######### POSTGRES HELPER FUNCTIONS #####################
 #########################################################
 
-# executes a given command in postgres using context credentials 
+# executes a given command in postgres using context credentials
 # @param 1 (required) command
 # @param 2 (optional) in case more parameters are added
 # @returns psql return code
@@ -92,27 +88,6 @@ test_db_connection (){
 	fi
 }
 
-# Enable pg_crypto if is not enabled 
-enable_pg_crypto()
-{
-        isPgCryptoInstalled=$(run_pg "\dx pgcrypto" )
-		if [[ ! $? -eq 0 ]]; then
-            print_err "PSQL connection error: Cannot connect using HOST=$POSTGRES_DB_HOST PORT=$POSTGRES_DB_PORT DBNAME=$POSTGRES_DB_NAME USER=$PGUSER and PGPASSWORD=$PGPASSWORD"
-        fi
-
-        if [[ ! $(echo $isPgCryptoInstalled | grep pgcrypto | wc -l) -eq 1 ]]; then
-                print_warn "pgcrypto not installed in database"
-                wasPgCryptoInstalled=$(run_pg "CREATE EXTENSION pgcrypto;")
-
-                if [[ ! $? -eq 0 ]]; then
-                	print_err "PSQL connection error: Cannot create extension PGCRYPTO"
-                fi
-                print_info "OK pgcrypto extension created"
-        else
-			print_info "OK pgcrypto extension is available"
-		fi
-}
-
 restore_db () {
 	print_info 'Searching for dump files...'
 	if [ -f $BOOTSTRAP_DUMP ]; then
@@ -129,7 +104,7 @@ restore_db () {
 
 # Init script environment
 init_env () {
-	#looks for POSTGRES ENV VARS 
+	#looks for POSTGRES ENV VARS
 	if [ ! -z $DB_PORT ]; then
 		# DB_PORT is something like tcp://127.0.0.4:5432/
 		POSTGRES_DB_HOST=`echo $DB_PORT | cut -d / -f 3 | cut -d \: -f 1`
@@ -139,12 +114,11 @@ init_env () {
 		POSTGRES_DB_PASS=${DB_ENV_POSTGRES_PASSWORD:-$POSTGRES_DB_PASS}
 	fi
 
-	# export 
+	# export
 	export DSPACE_SOURCE=$DSPACE_BASE/source
 	export DSPACE_DIR=$DSPACE_BASE/install
 
-	SOURCE_CFG_FILENAME="$DSPACE_SOURCE/dspace/config/local.cfg"
-	INSTALL_CFG_FILENAME="$DSPACE_DIR/config/local.cfg"
+	INSTALL_CFG_FILENAME="$DSPACE_BASE/source/build.properties"
 
 	TOMCAT="${CATALINA_HOME}/bin/catalina.sh"
 }
@@ -153,11 +127,6 @@ init_sources()
 {
 	# download sources
 	git clone -v --progress --depth=1 --branch "${DSPACE_GIT_REVISION}" "${DSPACE_GIT_URL}"  $DSPACE_SOURCE
-
-	#creates local.cfg if it does not exist
-	if [[ ! -f "$SOURCE_CFG_FILENAME" ]]; then
-		cp "$SOURCE_CFG_FILENAME.EXAMPLE" "$SOURCE_CFG_FILENAME"
-	fi
 }
 
 # Init DSpace local.cfg with contextual settings
@@ -167,8 +136,8 @@ init_config() {
 	set_dspace_property "db.url" "jdbc:postgresql://${POSTGRES_DB_HOST}:${POSTGRES_DB_PORT}/${POSTGRES_DB_NAME}" $cfg_file
 	set_dspace_property "db.username" "${POSTGRES_DB_USER}" $cfg_file
 	set_dspace_property "db.password" "${POSTGRES_DB_PASS}" $cfg_file
-	set_dspace_property "dspace.dir" "${DSPACE_DIR}" $cfg_file
-	
+	set_dspace_property "dspace.install.dir" "${DSPACE_DIR}" $cfg_file
+
 	#this allows truncating the database
 	set_dspace_property "db.cleanDisabled" "false" $cfg_file
 }
@@ -184,7 +153,7 @@ reset_db (){
 }
 
 truncate_all (){
-	
+
 	init_config $INSTALL_CFG_FILENAME
 	if ( confirm "Esta por borrar el directorio de instalación de dspace $DSPACE_DIR y la base de datos, está seguro que desea hacerlo? [Y/n]" ); then
 		print_info "Hago el clean y migrate de la BD para limpiarla. Si falla al crear el admin es porque el migrate no esta creando el group admin"
@@ -198,11 +167,11 @@ truncate_all (){
 
 rebuild_installer(){
 
-	init_config $SOURCE_CFG_FILENAME
-	
+	init_config $INSTALL_CFG_FILENAME
+
 	#MAVEN_OPTS="--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
 	if [ ! -z "$DSPACE_WEBAPPS" ]
-	then 
+	then
 		[[ $DSPACE_WEBAPPS != *"jspui"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-jspui"
 		[[ $DSPACE_WEBAPPS != *"xmlui"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui"
 		# if mirage2 is enabled use mirage2 settings, else disable mirage2 profile
@@ -231,7 +200,7 @@ enable_webapps(){
 
 	#delete symlinks if exist
 	if [ ! -z "`ls -A $CATALINA_HOME/webapps/`" ]; then
-		rm $CATALINA_HOME/webapps/* 
+		rm $CATALINA_HOME/webapps/*
 	fi
 
 	#enable ROOT Webapp
@@ -243,7 +212,7 @@ enable_webapps(){
 
 	#enable all webapps
 	for wa in $DSPACE_DIR/webapps/*
-	do 
+	do
 		if [ "$root_wa" != "$wa" ]; then
 			ln -s $wa $CATALINA_HOME/webapps/$(basename $wa)
 		fi
@@ -254,11 +223,11 @@ enable_webapps(){
 #########################################################
 #########################################################
 start () {
-	
+
 	if [ ! -d $DSPACE_DIR ]; then
 		print_err  "El directorio de instalación ${DSPACE_DIR} no existe, debe instalar!"
 	fi
-	
+
 	init_config $INSTALL_CFG_FILENAME
 	test_db_connection
 
@@ -287,15 +256,14 @@ install (){
 	# $TOMCAT stop &> /dev/null
 	rebuild_installer
 
-	enable_pg_crypto
-    restore_db
+  restore_db
 
 	cd $DSPACE_SOURCE/dspace/target/dspace-installer
 	ant fresh_install
 
 	print_info "Creating admin user"
-	dspace create-administrator 
-	#--email ${ADMIN_EMAIL} --first DSpace --last Administrator --language es --password -${ADMIN_PASSWD} 
+	dspace create-administrator
+	#--email ${ADMIN_EMAIL} --first DSpace --last Administrator --language es --password -${ADMIN_PASSWD}
 
 	#re? enable all webapps
 	enable_webapps
@@ -304,13 +272,13 @@ install (){
 	# dspace index-discovery
 }
 
-update () 
+update ()
 {
 	# $TOMCAT stop > /dev/null
 	rebuild_installer $1
 	cd $DSPACE_SOURCE/dspace/target/dspace-installer
 	ant clean_backups update
-	cd $DSPACE_SOURCE 
+	cd $DSPACE_SOURCE
 	mvn clean
 	# $TOMCAT start > /dev/null
 }
@@ -327,7 +295,7 @@ usage() {
 		exit 1
 }
 
-just_wait() 
+just_wait()
 {
 	tail -n 10 ${DSPACE_DIR}/log/dspace.log
 	#tail -F /etc/hosts
@@ -343,7 +311,7 @@ fi
 
 cd $DSPACE_BASE
 
-# se hace el "source ~/.bashrc" para importar las cfgs de mirage2 
+# se hace el "source ~/.bashrc" para importar las cfgs de mirage2
 # source ~/.bashrc
 
 init_env
@@ -369,7 +337,7 @@ case "$1" in
 		update fast
         ;;
     reset-db)
-        reset_db    
+        reset_db
         ;;
   	*)
         usage
