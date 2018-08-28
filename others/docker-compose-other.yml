@@ -3,10 +3,9 @@ services:
   dspace:
     image: dspace:sedici_master
     environment:
-      #DSPACE_GIT_URL: "https://github.com/CICBA/DSpace"
-      #DSPACE_GIT_REVISION: "master"
       DSPACE_GIT_URL: "https://github.com/sedici/DSpace"
       DSPACE_GIT_REVISION: "sedici_master"
       DSPACE_WEBAPPS: "xmlui oai sword"
-    #volumes:
-    #  - ./m2-settings.xml:/root/.m2/settings.xml
+    volumes:
+      - ./data/:/sedici/
+      - ~/.m2/:/root/.m2/
