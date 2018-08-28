@@ -23,7 +23,7 @@ services:
       DSPACE_WEBAPPS: "xmlui" # posible values: "jspui xmlui  mirage2 rest oai rdf sword swordv2"
       DSPACE_ROOT_WEBAPP: "xmlui"
     volumes:
-      - ./data/:/dspace-5/
+      - ./data/dspace-5/:/dspace/
       - ~/.m2/:/root/.m2/
     ports:
       - "9090:8080"
