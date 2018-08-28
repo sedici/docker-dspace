@@ -15,7 +15,7 @@ DSpace instant development environment using Docker Compose
 6. > Access http://localhost:9090/
 
 ## Making changes in dev
-1. change ```data/sources/*``` as desired
+1. change ```data/dspace-6/sources/*``` as desired
 2. run ```docker-compose run dspace update``` or ```docker-compose run dspace update-fast``` to recompile
 3. wait for tomcat to detect changes and reload the webapps 
 
