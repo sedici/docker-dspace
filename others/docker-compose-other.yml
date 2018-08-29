@@ -1,12 +1,12 @@
 version: "3"
 services:
+  db:
+    container_name: sedici_db
   dspace:
+    container_name: sedici
     image: dspace:sedici_master
     environment:
-      #DSPACE_GIT_URL: "https://github.com/CICBA/DSpace"
-      #DSPACE_GIT_REVISION: "master"
       DSPACE_GIT_URL: "https://github.com/sedici/DSpace"
       DSPACE_GIT_REVISION: "sedici_master"
       DSPACE_WEBAPPS: "xmlui oai sword"
-    #volumes:
-    #  - ./m2-settings.xml:/root/.m2/settings.xml
+      POSTGRES_DB_HOST: "sedici_db"
