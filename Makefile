@@ -1,0 +1,54 @@
+include .env
+
+.PHONY: up update install down stop prune ps bash logs
+
+default: up
+
+up:
+	@echo "Starting up containers for $(PROJECT_NAME)..."
+	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml up -d
+
+update:
+	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run dspace update
+	chown -R $(id -u):$(id -g) data/*
+
+install:
+	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run dspace install
+	chown -R $(id -u):$(id -g) data/*
+
+reset-db:
+	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run dspace reset-db
+
+index-discovery:
+	@if [ -f "data/install/bin/dspace" ]; then $(shell data/install/bin/dspace index-discovery --help); fi
+# 	if [ -f  "./data/install/bin/dspace" ] ; then echo ./data/install/bin/dspace index-discovery --help; fi
+
+down: stop
+
+
+stop:
+	@echo "Stopping containers for $(PROJECT_NAME)..."
+	@docker-compose stop
+
+prune:
+	@echo "Removing containers for $(PROJECT_NAME)..."
+	@docker-compose down -v
+
+ps:
+	@docker ps --filter name='$(PROJECT_NAME)*'
+
+bash:
+	docker exec -i -t '$(PROJECT_NAME)' /bin/bash
+
+logs:
+	@docker-compose logs -f $(filter-out $@,$(MAKECMDGOALS))
+
+log:
+	tail -f data/install/log/$(filter-out $@,$(MAKECMDGOALS)).log
+
+less:
+	less -N data/install/log/$(filter-out $@,$(MAKECMDGOALS)).log
+
+# https://stackoverflow.com/a/6273809/1826109
+%:
+	@:
