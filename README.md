@@ -38,6 +38,14 @@ run
 
 You can now attach a remote debugger from your IDE just as if Tomcat were running locally. If your development machine is your Docker host, you have to attach to localhost 8000 (you can change the port in docker-compose-debug.yml).
 
+## Remote Maven Test debug with Eclipse
+First edit docker-compose-debug to bind localhost 5005 port to container's 5005 port.
+Then, inside the container, go to /dspace/source and run mvn tests with 
+```mvn -Dmaven.test.skip=false -Dmaven.surefire.debug test```
+The test will wait for Eclipse to connect.
+
+Open the Debug Configuration in Eclipse and set up a remote application on port 5005. Run the configuration. The test will resume. You can use break points and all the usual features of Eclipse debugging.
+
 ## TODO
   - set tomcat Xmx, Xms, and more in setenv.sh
   - Mirar https://github.com/docker-library/official-images#library-definition-files 
