@@ -20,8 +20,8 @@ reset-db:
 	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run dspace reset-db
 
 index-discovery:
-	@if [ -f "data/install/bin/dspace" ]; then $(shell data/install/bin/dspace index-discovery --help); fi
-# 	if [ -f  "./data/install/bin/dspace" ] ; then echo ./data/install/bin/dspace index-discovery --help; fi
+	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'index-discovery' command... In example 'make PARAMS=\"-b\" index-discovery'"...
+	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"index-discovery $(PARAMS)\"..."; docker exec -it cicba /dspace/install/bin/dspace index-discovery "$(PARAMS)"; echo "Exiting..."; fi
 
 down: stop
 
