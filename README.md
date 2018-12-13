@@ -29,14 +29,32 @@ You can copy a dump file into ```data``` directory before or after running
 If you copy it before running the install command then the database will be populated automatically from your dump file, otherwise you must run 
 ```docker-compose run dspace reset-db```
 
-## Remote debug
-To enable remote tomcat debug instead of running
+## Remote debug of Tomcat WEBAPPS
+To enable remote tomcat debug of DSpace Webapps, you must run either commands next
+
 ```docker-compose up ```
 
-run 
+or
+
 ```docker-compose -f docker-compose.yml -f docker-compose-debug.yml up ```
 
 You can now attach a remote debugger from your IDE just as if Tomcat were running locally. If your development machine is your Docker host, you have to attach to localhost 8000 (you can change the port in docker-compose-debug.yml).
+
+## Remote debug of CLI DSpace commands
+To enable the debug of any command executed with *DSPACE_DIR/bin/dspace* script, then you must do the following:
+1. Modifiy the last line of DSpace script (at DSPACE_DIR/bin/dspace) and add the **$JPDA_CLI_OPTS** option in java incovation:
+```bash
+java  $JPDA_CLI_OPTS $JAVA_OPTS -classpath $FULLPATH org.dspace.app.launcher.ScriptLauncher "$@"
+```
+2. Barely run a dspace command, start a **Socket Attach** connection at Port **8001** in Eclipse IDE. To do this, create a new "Java Remote Application" debug configuration with the parametters specified previously.
+
+## Remote Maven Test debug with Eclipse
+First edit docker-compose-debug to bind localhost 5005 port to container's 5005 port.
+Then, inside the container, go to /dspace/source and run mvn tests with 
+```mvn -Dmaven.test.skip=false -Dmaven.surefire.debug test```
+The test will wait for Eclipse to connect.
+
+Open the Debug Configuration in Eclipse and set up a remote application on port 5005. Run the configuration. The test will resume. You can use break points and all the usual features of Eclipse debugging.
 
 ## TODO
   - set tomcat Xmx, Xms, and more in setenv.sh

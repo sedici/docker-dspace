@@ -4,6 +4,9 @@ services:
     command: start --debug
     environment:
       JPDA_ADDRESS: "8000"
+      #This property must be used in the 'java' invocation inside de 'dspace_dir/bin/dspace' bash file. 
+      #I.e. replace the last line with 'java $JPDA_CLI_OPTS $JAVA_OPTS ... org.dspace.app.launcher.ScriptLauncher "$@"'
+      JPDA_CLI_OPTS: "-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8001"
     ports:
       - "8000:8000"
-#
+      - "8001:8001"
