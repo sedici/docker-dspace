@@ -21,7 +21,7 @@ reset-db:
 
 index-discovery:
 	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'index-discovery' command... In example 'make PARAMS=\"-b\" index-discovery'"...
-	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"index-discovery $(PARAMS)\"..."; docker exec -it cicba /dspace/install/bin/dspace index-discovery "$(PARAMS)"; echo "Exiting..."; fi
+	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"index-discovery $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace index-discovery "$(PARAMS)"; echo "Exiting..."; fi
 
 down: stop
 
