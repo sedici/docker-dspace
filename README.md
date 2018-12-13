@@ -46,7 +46,7 @@ To enable the debug of any command executed with *DSPACE_DIR/bin/dspace* script,
 ```bash
 java  $JPDA_CLI_OPTS $JAVA_OPTS -classpath $FULLPATH org.dspace.app.launcher.ScriptLauncher "$@"
 ```
-2. Just run the command, start a **Socket Attach** connection at Port **8001** in Eclipse IDE. To do this, create a new "Java Remote Application" debug configuration with the parametters specified previously.
+2. Barely run a dspace command, start a **Socket Attach** connection at Port **8001** in Eclipse IDE. To do this, create a new "Java Remote Application" debug configuration with the parametters specified previously.
 
 ## Remote Maven Test debug with Eclipse
 First edit docker-compose-debug to bind localhost 5005 port to container's 5005 port.
