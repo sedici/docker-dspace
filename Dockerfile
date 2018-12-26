@@ -25,9 +25,6 @@ ENV PATH=${CATALINA_HOME}/bin:${DSPACE_BASE}/install/bin:$PATH \
 
 ENV BOOTSTRAP_DUMP "${DSPACE_BASE}/bootstrap-dump.sql"
 
-RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak && \
-	echo 'deb http://mirrors.dcarsat.com.ar/debian/ stretch contrib main non-free' | cat - /etc/apt/sources.list.bak > /etc/apt/sources.list
-
 #workaround for slim issue https://github.com/debuerreotype/debuerreotype/issues/10
 #workaround for https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=866729
 RUN mkdir -p /usr/share/man/man1 /usr/share/man/man7
