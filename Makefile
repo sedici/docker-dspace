@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: up update install down stop prune ps bash logs
+.PHONY: up update install down stop prune ps bash logs index-discovery oai
 
 default: up
 
@@ -9,7 +9,7 @@ up:
 	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml up -d
 
 update:
-	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run dspace update
+	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run --rm dspace update
 	chown -R $(id -u):$(id -g) data/*
 
 install:
@@ -21,7 +21,11 @@ reset-db:
 
 index-discovery:
 	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'index-discovery' command... In example 'make PARAMS=\"-b\" index-discovery'"...
-	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"index-discovery $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace index-discovery "$(PARAMS)"; echo "Exiting..."; fi
+	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"index-discovery $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace index-discovery $(PARAMS); echo "Exiting..."; fi
+
+oai:
+	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'oai' command... In example 'make PARAMS=\"import -v\" oai'"...
+	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"oai $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace oai $(PARAMS); echo "Exiting..."; fi
 
 down: stop
 
