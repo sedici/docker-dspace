@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: up update install down stop prune ps bash logs
+.PHONY: up update install down stop prune ps bash logs dsbin
 
 default: up
 
@@ -22,6 +22,11 @@ reset-db:
 index-discovery:
 	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'index-discovery' command... In example 'make PARAMS=\"-b\" index-discovery'"...
 	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"index-discovery $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace index-discovery "$(PARAMS)"; echo "Exiting..."; fi
+
+dsbin:
+	@echo "[HELP!] Define \"COMMAND\" variable if wants to pass specifics command to 'bin/dspace' DSpace's CLI... In example 'make COMMAND=\"dsprop -p dspace.dir\" dsbin'"...
+	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"bin/dspace $(COMMAND)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace $(COMMAND); echo "Exiting..."; fi
+
 
 down: stop
 
