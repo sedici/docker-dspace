@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: up update install down stop prune ps bash logs index-discovery oai
+.PHONY: up update install down stop prune ps bash logs index-discovery oai dsbin
 
 default: up
 
@@ -26,6 +26,11 @@ index-discovery:
 oai:
 	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'oai' command... In example 'make PARAMS=\"import -v\" oai'"...
 	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"oai $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace oai $(PARAMS); echo "Exiting..."; fi
+
+dsbin:
+	@echo "[HELP!] Define \"COMMAND\" variable if wants to pass specifics command to 'bin/dspace' DSpace's CLI... In example 'make COMMAND=\"dsprop -p dspace.dir\" dsbin'"...
+	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"bin/dspace $(COMMAND)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace $(COMMAND); echo "Exiting..."; fi
+
 
 down: stop
 
