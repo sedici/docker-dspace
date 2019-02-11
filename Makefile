@@ -33,7 +33,7 @@ down: stop
 
 stop:
 	@echo "Stopping containers for $(PROJECT_NAME)..."
-	@docker-compose stop
+	@docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml stop
 
 prune:
 	@echo "Removing containers for $(PROJECT_NAME)..."
