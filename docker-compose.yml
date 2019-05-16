@@ -19,8 +19,8 @@ services:
     environment:
       CATALINA_OPTS: "-Xmx1024m -Xms512m -XX:MaxPermSize=256m"
       DSPACE_GIT_URL: "https://github.com/DSpace/DSpace"
-      DSPACE_GIT_REVISION: "dspace-6.2"
-      DSPACE_WEBAPPS: "xmlui" # posible values: "jspui xmlui  mirage2 rest oai rdf sword swordv2"
+      DSPACE_GIT_REVISION: "dspace-6.3"
+      DSPACE_WEBAPPS: "xmlui mirage2" # posible values: "jspui xmlui  mirage2 rest oai rdf sword swordv2"
       DSPACE_ROOT_WEBAPP: "xmlui"
     volumes:
       - ./data/:/dspace/

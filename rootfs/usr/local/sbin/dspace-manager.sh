@@ -199,14 +199,14 @@ truncate_all (){
 rebuild_installer(){
 
 	init_config $SOURCE_CFG_FILENAME
-	
+	su $DSPACE_USER
 	#MAVEN_OPTS="--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
 	if [ ! -z "$DSPACE_WEBAPPS" ]
 	then 
 		[[ $DSPACE_WEBAPPS != *"jspui"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-jspui"
 		[[ $DSPACE_WEBAPPS != *"xmlui"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui"
 		# if mirage2 is enabled use mirage2 settings, else disable mirage2 profile
-		[[ $DSPACE_WEBAPPS = *"mirage2"* ]] && MAVEN_OPTS="$MAVEN_OPTS -Dmirage2.on=true -Dmirage2.deps.included=true" || MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui-mirage2"
+		[[ $DSPACE_WEBAPPS = *"mirage2"* ]] && MAVEN_OPTS="$MAVEN_OPTS -Dmirage2.on=true -Dmirage2.deps.included=false" || MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui-mirage2"
 		[[ $DSPACE_WEBAPPS != *"sword"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-sword"
 		[[ $DSPACE_WEBAPPS != *"swordv2"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-swordv2"
 		[[ $DSPACE_WEBAPPS != *"rdf"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-rdf"
@@ -224,6 +224,7 @@ rebuild_installer(){
 	print_info "Packaging dspace with MAVEN_OPTS='$MAVEN_OPTS'. "
 	print_info "Please be patient, it may take several minutes. "
 	mvn package $MAVEN_OPTS
+	exit
 }
 
 enable_webapps(){
@@ -250,6 +251,46 @@ enable_webapps(){
 	done
 
 	print_info "Se activaron las siguientes webapps: `ls $CATALINA_HOME/webapps/`"
+}
+
+install_extra_dependencies(){
+	useradd --home-dir $DSPACE_BASE --create-home --shell /bin/bash $DSPACE_USER
+	chown -R $DSPACE_USER.$DSPACE_USER $DSPACE_BASE
+	mkdir /etc/sudoers.d
+	echo "${DSPACE_USER} ALL= NOPASSWD:ALL" > /etc/sudoers.d/rvm
+	apt-get update --fix-missing
+	apt-get -y upgrade && apt-get -y install procps curl sudo gpg
+
+	su --login $DSPACE_USER  <<EOF
+#Mirage dependencies
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | bash
+
+export NVM_DIR="/dspace/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+env
+
+nvm install 6.5.0
+nvm alias default 6.5.0
+npm install -g bower
+npm install -g grunt
+npm install -g grunt-cli
+
+command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+command curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -
+command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+curl -sSL https://get.rvm.io | bash -s stable --ruby
+# rvm install ruby --default
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
+source /dspace/.rvm/scripts/rvm
+gem install sass -v 3.3.14 --no-document && gem install compass -v 1.0.1 --no-document
+
+echo 'export PATH="\$PATH:\$HOME/.rvm/bin"' >> ~/.bash_profile
+echo '[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*' >> ~/.bashrc
+
+exit 0
+EOF
+# mvn package -Dmirage2.on=true -Dmirage2.deps.included=false
+rm  /etc/sudoers.d/rvm
 }
 #########################################################
 #########################################################
@@ -283,7 +324,7 @@ install (){
 	if [ ! -d $DSPACE_SOURCE ]; then
 		init_sources
 	fi
-
+	install_extra_dependencies
 	# $TOMCAT stop &> /dev/null
 	rebuild_installer
 
