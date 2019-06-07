@@ -1,30 +1,34 @@
 version: "3"
 services:
   db:
-    container_name: dspace_db
+    container_name: dspace_db_${PROJECT_NAME}
     image: postgres:9.5-alpine
     environment:
-      POSTGRES_DB: "dspace"
-      POSTGRES_USER: "dspace"
-      POSTGRES_PASSWORD: "dspace"
+      POSTGRES_DB: "dspace_${PROJECT_NAME}"
+      POSTGRES_USER: dspace
+      POSTGRES_PASSWORD: dspace
     volumes:
       - /var/lib/postgresql/data
   dspace:
     container_name: dspace
-    image: dspace:latest
+    image: dspace:dspace_${PROJECT_NAME}_latest
     build:
       context: ./
       dockerfile: Dockerfile
     command: start
     environment:
       CATALINA_OPTS: "-Xmx1024m -Xms512m -XX:MaxPermSize=256m"
-      DSPACE_GIT_URL: "https://github.com/DSpace/DSpace"
-      DSPACE_GIT_REVISION: "dspace-6.3"
-      DSPACE_WEBAPPS: "xmlui mirage2" # posible values: "jspui xmlui  mirage2 rest oai rdf sword swordv2"
-      DSPACE_ROOT_WEBAPP: "xmlui"
+      DSPACE_GIT_URL: "${DSPACE_GIT_URL}"
+      DSPACE_GIT_REVISION: "${DSPACE_GIT_REVISION}"
+      DSPACE_WEBAPPS: "${DSPACE_WEBAPPS}" # posible values: "jspui xmlui  mirage2 rest oai rdf sword swordv2"
+      DSPACE_ROOT_WEBAPP: "${DSPACE_ROOT_WEBAPP}"
+      POSTGRES_DB_HOST: "dspace_db_${PROJECT_NAME}"
+      POSTGRES_DB_NAME: "dspace_${PROJECT_NAME}"
+      DSPACE_USER: dspace
+      DSPACE_PASS: dspace
     volumes:
       - ./data/:/dspace/
-      - ~/.m2/:/root/.m2/
+      - ~/.m2/:/dspace/.m2/
     ports:
       - "9090:8080"
     depends_on: 

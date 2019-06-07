@@ -30,10 +30,12 @@ ENV BOOTSTRAP_DUMP "${DSPACE_BASE}/bootstrap-dump.sql"
 RUN mkdir -p /usr/share/man/man1 /usr/share/man/man7
 
 RUN apt-get update && apt-get -y upgrade
-RUN apt-get install -y --no-install-recommends  git openjdk-8-jdk ant maven postgresql-client  
+RUN apt-get install -y --no-install-recommends  git openjdk-8-jdk ant maven postgresql-client  \
+	procps curl sudo gpg
 	#imagemagick ghostscript \
 	#net-tools bash-completion mlocate nano less procps apt-utils \
 	#apache2 
+
 RUN apt-get autoremove -y && apt-get clean
 
 WORKDIR ${DSPACE_BASE}
@@ -56,7 +58,7 @@ EXPOSE 8080
 CMD ["start"]
 ENTRYPOINT ["dspace-manager.sh"]
 
-# 
+# FIXME agregar user dspace
 # ARG DSPACE_USER
 # DSPACE_USER=${DSPACE_USER:-dspace} \
 # RUN useradd --home-dir $DSPACE_BASE --create-home --shell /bin/bash $DSPACE_USER   

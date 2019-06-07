@@ -6,12 +6,6 @@ services:
     image: dspace:mirage2
     container_name: mirage2
     environment:
-      #DSPACE_GIT_URL: "https://github.com/CICBA/DSpace"
-      #DSPACE_GIT_REVISION: "master"
-      #DSPACE_WEBAPPS: "xmlui oai sword"
-      POSTGRES_DB_HOST: ${DB_HOST}
-      DSPACE_USER: dspace
-      DSPACE_PASS: dspace
   #pgadmin4:
   #  image: dpage/pgadmin4
   #  environment:

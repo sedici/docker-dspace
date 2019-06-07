@@ -6,18 +6,18 @@ default: up
 
 up:
 	@echo "Starting up containers for $(PROJECT_NAME)..."
-	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml up -d
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml up -d
 
 update:
-	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run dspace update
-	chown -R $(id -u):$(id -g) data/*
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace update
+	sudo chown -R $(id -u):$(id -g) data/*
 
 install:
-	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run dspace install
-	chown -R $(id -u):$(id -g) data/*
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace install
+	sudo chown -R $(id -u):$(id -g) data/*
 
 reset-db:
-	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run dspace reset-db
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace reset-db
 
 index-discovery:
 	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'index-discovery' command... In example 'make PARAMS=\"-b\" index-discovery'"...
@@ -33,7 +33,7 @@ down: stop
 
 stop:
 	@echo "Stopping containers for $(PROJECT_NAME)..."
-	@docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml stop
+	@docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml stop
 
 prune:
 	@echo "Removing containers for $(PROJECT_NAME)..."

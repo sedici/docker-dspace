@@ -158,6 +158,7 @@ init_sources()
 	if [[ ! -f "$SOURCE_CFG_FILENAME" ]]; then
 		cp "$SOURCE_CFG_FILENAME.EXAMPLE" "$SOURCE_CFG_FILENAME"
 	fi
+	reset_permissions
 }
 
 # Init DSpace local.cfg with contextual settings
@@ -188,6 +189,7 @@ truncate_all (){
 	init_config $INSTALL_CFG_FILENAME
 	if ( confirm "Esta por borrar el directorio de instalación de dspace $DSPACE_DIR y la base de datos, está seguro que desea hacerlo? [Y/n]" ); then
 		print_info "Hago el clean y migrate de la BD para limpiarla. Si falla al crear el admin es porque el migrate no esta creando el group admin"
+		#TODO check if dspace cmd exists
 		dspace database clean
 
 		rm -rf $DSPACE_DIR/*
@@ -199,7 +201,6 @@ truncate_all (){
 rebuild_installer(){
 
 	init_config $SOURCE_CFG_FILENAME
-	su $DSPACE_USER
 	#MAVEN_OPTS="--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
 	if [ ! -z "$DSPACE_WEBAPPS" ]
 	then 
@@ -213,20 +214,32 @@ rebuild_installer(){
 		[[ $DSPACE_WEBAPPS != *"rest"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-rest"
 		[[ $DSPACE_WEBAPPS != *"oai"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-oai"
 	fi
-
-	cd $DSPACE_SOURCE
-
-	if [[ $1 == "fast" ]]; then
-		cd dspace
-	fi
-	# git config --global url.https://github.com/.insteadOf git://github.com/
-
+	
 	print_info "Packaging dspace with MAVEN_OPTS='$MAVEN_OPTS'. "
 	print_info "Please be patient, it may take several minutes. "
+
+	sudo --login -u $DSPACE_USER <<EOF
+	cd $DSPACE_SOURCE
+source ~/.bashrc
+	# if [[ $1 == "fast" ]]; then
+	# 	cd dspace
+	# fi
+	# git config --global url.https://github.com/.insteadOf git://github.com/
+
+
+	# echo ejecuto `whoami` mvn package $MAVEN_OPTS
+
 	mvn package $MAVEN_OPTS
-	exit
+
+EOF
+
 }
 
+reset_permissions(){
+
+	chown -R $DSPACE_USER.$DSPACE_USER $DSPACE_BASE
+
+}
 enable_webapps(){
 	print_info "Creating symlinks for webapps"
 
@@ -253,21 +266,19 @@ enable_webapps(){
 	print_info "Se activaron las siguientes webapps: `ls $CATALINA_HOME/webapps/`"
 }
 
-install_extra_dependencies(){
-	useradd --home-dir $DSPACE_BASE --create-home --shell /bin/bash $DSPACE_USER
-	chown -R $DSPACE_USER.$DSPACE_USER $DSPACE_BASE
-	mkdir /etc/sudoers.d
+install_mirage2_dependencies(){
+	# Esta funcion podría invocarse automaticamente cuando  $DSPACE_WEBAPPS = *"mirage2"* y no están instaladas. 
+	# [[ $DSPACE_WEBAPPS = *"mirage2"* ]] && not_installed && install_mirage2_dependencies
+
+	#mkdir /etc/sudoers.d
 	echo "${DSPACE_USER} ALL= NOPASSWD:ALL" > /etc/sudoers.d/rvm
-	apt-get update --fix-missing
-	apt-get -y upgrade && apt-get -y install procps curl sudo gpg
 
+	#Mirage dependencies
 	su --login $DSPACE_USER  <<EOF
-#Mirage dependencies
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | bash
-
-export NVM_DIR="/dspace/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
-env
+touch ~/.bash_profile ~/.bashrc
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+# curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | bash
+source ~/.bashrc
 
 nvm install 6.5.0
 nvm alias default 6.5.0
@@ -277,20 +288,18 @@ npm install -g grunt-cli
 
 command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
 command curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -
-command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
-curl -sSL https://get.rvm.io | bash -s stable --ruby
-# rvm install ruby --default
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm"
+curl -sSL https://get.rvm.io | bash -s stable --auto-dotfiles
 source /dspace/.rvm/scripts/rvm
-gem install sass -v 3.3.14 --no-document && gem install compass -v 1.0.1 --no-document
 
-echo 'export PATH="\$PATH:\$HOME/.rvm/bin"' >> ~/.bash_profile
-echo '[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*' >> ~/.bashrc
+rvm pkg install libyaml
+rvm install ruby --default
+source ~/.bashrc
 
-exit 0
+gem install sass -v 3.3.14 --no-document
+gem install compass -v 1.0.1 --no-document
+
 EOF
-# mvn package -Dmirage2.on=true -Dmirage2.deps.included=false
-rm  /etc/sudoers.d/rvm
+	rm  /etc/sudoers.d/rvm
 }
 #########################################################
 #########################################################
@@ -324,8 +333,8 @@ install (){
 	if [ ! -d $DSPACE_SOURCE ]; then
 		init_sources
 	fi
-	install_extra_dependencies
-	# $TOMCAT stop &> /dev/null
+
+
 	rebuild_installer
 
 	enable_pg_crypto
@@ -358,14 +367,14 @@ update ()
 
 usage() {
 	#TODO UPDATE MSG
-		echo "     - install"
-		echo "     - truncate"
-		echo "     - update"
-		echo "     - update-fast: build inside dspace dir (compiles only customizations)"
-		echo "     - start"
-		echo "     - start --debug: enable remote debug mode"
-		echo "     - reset-db"
-		exit 1
+	echo "     - install"
+	echo "     - truncate"
+	echo "     - update"
+	echo "     - update-fast: build inside dspace dir (compiles only customizations)"
+	echo "     - start"
+	echo "     - start --debug: enable remote debug mode"
+	echo "     - reset-db"
+	exit 1
 }
 
 just_wait() 
@@ -378,9 +387,7 @@ just_wait()
 #########################################################
 
 #validates current user be the same as DSPACE_USER
-if [ ! "id ${DSPACE_USER} 2> /dev/null | grep $DSPACE_USER" ]; then
-	print_err "El usuario que está ejecutando este comando no es el usuario predefinido de dspace '$DSPACE_USER', no se permite usar otro usuario para evitar problemas de permisos en el directorio de instalación."
-fi
+id -u ${DSPACE_USER} &>/dev/null || useradd --home-dir $DSPACE_BASE --create-home --shell /bin/bash $DSPACE_USER
 
 cd $DSPACE_BASE
 
@@ -388,6 +395,7 @@ cd $DSPACE_BASE
 # source ~/.bashrc
 
 init_env
+reset_permissions
 case "$1" in
   	start)
         if [ "$2" = "--debug" ]; then
@@ -397,9 +405,9 @@ case "$1" in
         fi
 		just_wait
 		;;
-	# init_sources)
-		# init_sources
-		# ;;
+	install_mirage2_dependencies)
+		install_mirage2_dependencies
+		;;
   	install)
 		install
 		;;
