@@ -43,7 +43,7 @@ ps:
 	@docker ps --filter name='$(PROJECT_NAME)*'
 
 bash:
-	docker exec -i -t '$(PROJECT_NAME)' /bin/bash
+	docker exec -i -t 'dspace_$(PROJECT_NAME)' /bin/bash
 
 logs:
 	@docker-compose logs -f $(filter-out $@,$(MAKECMDGOALS))
