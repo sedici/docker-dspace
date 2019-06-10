@@ -10,7 +10,7 @@ services:
     volumes:
       - /var/lib/postgresql/data
   dspace:
-    container_name: dspace
+    container_name: dspace_${PROJECT_NAME}
     image: dspace:dspace_${PROJECT_NAME}_latest
     build:
       context: ./
