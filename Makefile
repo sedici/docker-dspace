@@ -9,8 +9,12 @@ up:
 	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml up -d
 
 update:
+	@echo "Stopping containers for $(PROJECT_NAME)..."
+	@docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml stop
 	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace update
 	sudo chown -R $(id -u):$(id -g) data/*
+	@echo "Starting up containers for $(PROJECT_NAME)..."
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml up -d
 
 install:
 	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace install
