@@ -12,7 +12,7 @@ confirm() {
     local message=${1:-'Are you sure? [y/N]'}
 	# call with a prompt string or use a default
     read -r -p "$message" response
-	response=${response,,}
+	response=${response,,} 
     if [[ $response =~ ^(yes|y|Y) ]]; then
 		return 0
     else
@@ -36,7 +36,7 @@ print_info(){
 }
 
 # @param 1 (required) property name to look for
-# @param 2 (required) java properties file name
+# @param 2 (required) java properties file name 
 # @returns property value if found, null otherwise
 get_dspace_property () {
 	local cfg_file=${2}
@@ -45,12 +45,16 @@ get_dspace_property () {
 
 # add the property=value assignment in a java properties file or override it if already exists
 # @param 1 (required) property name
-# @param 2 (required) property value
-# @param 3 (required) java properties  file name
+# @param 2 (required) property value 
+# @param 3 (required) java properties  file name 
 set_dspace_property (){
 	local propval="${1} = ${2}"
 	local cfg_file=${3}
+	if [[ ! -f "$cfg_file" ]]; then
+		print_warn "El archivo ${cfg_file} no existe, no se puede continuar"
+		touch $cfg_file
 
+	fi
 	local oldval=$(get_dspace_property $1 $cfg_file)
 	if [ -z "${oldval}" ]; then
         echo $propval >> ${cfg_file}
@@ -62,7 +66,7 @@ set_dspace_property (){
 ######### POSTGRES HELPER FUNCTIONS #####################
 #########################################################
 
-# executes a given command in postgres using context credentials
+# executes a given command in postgres using context credentials 
 # @param 1 (required) command
 # @param 2 (optional) in case more parameters are added
 # @returns psql return code
@@ -104,7 +108,7 @@ restore_db () {
 
 # Init script environment
 init_env () {
-	#looks for POSTGRES ENV VARS
+	#looks for POSTGRES ENV VARS 
 	if [ ! -z $DB_PORT ]; then
 		# DB_PORT is something like tcp://127.0.0.4:5432/
 		POSTGRES_DB_HOST=`echo $DB_PORT | cut -d / -f 3 | cut -d \: -f 1`
@@ -114,12 +118,12 @@ init_env () {
 		POSTGRES_DB_PASS=${DB_ENV_POSTGRES_PASSWORD:-$POSTGRES_DB_PASS}
 	fi
 
-	# export
+	# export 
 	export DSPACE_SOURCE=$DSPACE_BASE/source
 	export DSPACE_DIR=$DSPACE_BASE/install
 
-	INSTALL_CFG_FILENAME="$DSPACE_BASE/source/build.properties"
-
+	SOURCE_CFG_FILENAME="$DSPACE_BASE/source/build.properties"
+	#INSTALL_CFG_FILENAME no hay en DSPACE_5
 	TOMCAT="${CATALINA_HOME}/bin/catalina.sh"
 }
 
@@ -127,6 +131,7 @@ init_sources()
 {
 	# download sources
 	git clone -v --progress --depth=1 --branch "${DSPACE_GIT_REVISION}" "${DSPACE_GIT_URL}"  $DSPACE_SOURCE
+	reset_permissions
 }
 
 # Init DSpace local.cfg with contextual settings
@@ -137,7 +142,7 @@ init_config() {
 	set_dspace_property "db.username" "${POSTGRES_DB_USER}" $cfg_file
 	set_dspace_property "db.password" "${POSTGRES_DB_PASS}" $cfg_file
 	set_dspace_property "dspace.install.dir" "${DSPACE_DIR}" $cfg_file
-
+	
 	#this allows truncating the database
 	set_dspace_property "db.cleanDisabled" "false" $cfg_file
 }
@@ -153,10 +158,11 @@ reset_db (){
 }
 
 truncate_all (){
-
+	
 	init_config $INSTALL_CFG_FILENAME
 	if ( confirm "Esta por borrar el directorio de instalación de dspace $DSPACE_DIR y la base de datos, está seguro que desea hacerlo? [Y/n]" ); then
 		print_info "Hago el clean y migrate de la BD para limpiarla. Si falla al crear el admin es porque el migrate no esta creando el group admin"
+		#TODO check if dspace cmd exists
 		dspace database clean
 
 		rm -rf $DSPACE_DIR/*
@@ -167,40 +173,52 @@ truncate_all (){
 
 rebuild_installer(){
 
-	init_config $INSTALL_CFG_FILENAME
-
+	init_config $SOURCE_CFG_FILENAME
 	#MAVEN_OPTS="--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
 	if [ ! -z "$DSPACE_WEBAPPS" ]
-	then
+	then 
 		[[ $DSPACE_WEBAPPS != *"jspui"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-jspui"
 		[[ $DSPACE_WEBAPPS != *"xmlui"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui"
 		# if mirage2 is enabled use mirage2 settings, else disable mirage2 profile
-		[[ $DSPACE_WEBAPPS = *"mirage2"* ]] && MAVEN_OPTS="$MAVEN_OPTS -Dmirage2.on=true -Dmirage2.deps.included=true" || MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui-mirage2"
+		[[ $DSPACE_WEBAPPS = *"mirage2"* ]] && MAVEN_OPTS="$MAVEN_OPTS -Dmirage2.on=true -Dmirage2.deps.included=false" || MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui-mirage2"
 		[[ $DSPACE_WEBAPPS != *"sword"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-sword"
 		[[ $DSPACE_WEBAPPS != *"swordv2"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-swordv2"
 		[[ $DSPACE_WEBAPPS != *"rdf"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-rdf"
 		[[ $DSPACE_WEBAPPS != *"rest"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-rest"
 		[[ $DSPACE_WEBAPPS != *"oai"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-oai"
 	fi
-
-	cd $DSPACE_SOURCE
-
-	if [[ $1 == "fast" ]]; then
-		cd dspace
-	fi
-	# git config --global url.https://github.com/.insteadOf git://github.com/
-
+	
 	print_info "Packaging dspace with MAVEN_OPTS='$MAVEN_OPTS'. "
 	print_info "Please be patient, it may take several minutes. "
+
+	sudo --login -u $DSPACE_USER <<EOF
+	cd $DSPACE_SOURCE
+source ~/.bashrc
+	# if [[ $1 == "fast" ]]; then
+	# 	cd dspace
+	# fi
+	# git config --global url.https://github.com/.insteadOf git://github.com/
+
+
+	# echo ejecuto `whoami` mvn package $MAVEN_OPTS
+
 	mvn package $MAVEN_OPTS
+
+EOF
+
 }
 
+reset_permissions(){
+
+	chown -R $DSPACE_USER.$DSPACE_USER $DSPACE_BASE
+
+}
 enable_webapps(){
 	print_info "Creating symlinks for webapps"
 
 	#delete symlinks if exist
 	if [ ! -z "`ls -A $CATALINA_HOME/webapps/`" ]; then
-		rm $CATALINA_HOME/webapps/*
+		rm $CATALINA_HOME/webapps/* 
 	fi
 
 	#enable ROOT Webapp
@@ -212,7 +230,7 @@ enable_webapps(){
 
 	#enable all webapps
 	for wa in $DSPACE_DIR/webapps/*
-	do
+	do 
 		if [ "$root_wa" != "$wa" ]; then
 			ln -s $wa $CATALINA_HOME/webapps/$(basename $wa)
 		fi
@@ -220,14 +238,50 @@ enable_webapps(){
 
 	print_info "Se activaron las siguientes webapps: `ls $CATALINA_HOME/webapps/`"
 }
+
+install_mirage2_dependencies(){
+	# Esta funcion podría invocarse automaticamente cuando  $DSPACE_WEBAPPS = *"mirage2"* y no están instaladas. 
+	# [[ $DSPACE_WEBAPPS = *"mirage2"* ]] && not_installed && install_mirage2_dependencies
+
+	#mkdir /etc/sudoers.d
+	echo "${DSPACE_USER} ALL= NOPASSWD:ALL" > /etc/sudoers.d/rvm
+
+	#Mirage dependencies
+	su --login $DSPACE_USER  <<EOF
+touch ~/.bash_profile ~/.bashrc
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+# curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | bash
+source ~/.bashrc
+
+nvm install 6.5.0
+nvm alias default 6.5.0
+npm install -g bower
+npm install -g grunt
+npm install -g grunt-cli
+
+command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+command curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -
+curl -sSL https://get.rvm.io | bash -s stable --auto-dotfiles
+source /dspace/.rvm/scripts/rvm
+
+rvm pkg install libyaml
+rvm install ruby --default
+source ~/.bashrc
+
+gem install sass -v 3.3.14 --no-document
+gem install compass -v 1.0.1 --no-document
+
+EOF
+	rm  /etc/sudoers.d/rvm
+}
 #########################################################
 #########################################################
 start () {
-
+	
 	if [ ! -d $DSPACE_DIR ]; then
 		print_err  "El directorio de instalación ${DSPACE_DIR} no existe, debe instalar!"
 	fi
-
+	
 	init_config $INSTALL_CFG_FILENAME
 	test_db_connection
 
@@ -253,17 +307,17 @@ install (){
 		init_sources
 	fi
 
-	# $TOMCAT stop &> /dev/null
+
 	rebuild_installer
 
-  restore_db
+    restore_db
 
 	cd $DSPACE_SOURCE/dspace/target/dspace-installer
 	ant fresh_install
 
 	print_info "Creating admin user"
-	dspace create-administrator
-	#--email ${ADMIN_EMAIL} --first DSpace --last Administrator --language es --password -${ADMIN_PASSWD}
+	dspace create-administrator 
+	#--email ${ADMIN_EMAIL} --first DSpace --last Administrator --language es --password -${ADMIN_PASSWD} 
 
 	#re? enable all webapps
 	enable_webapps
@@ -272,30 +326,30 @@ install (){
 	# dspace index-discovery
 }
 
-update ()
+update () 
 {
 	# $TOMCAT stop > /dev/null
 	rebuild_installer $1
 	cd $DSPACE_SOURCE/dspace/target/dspace-installer
 	ant clean_backups update
-	cd $DSPACE_SOURCE
+	cd $DSPACE_SOURCE 
 	mvn clean
 	# $TOMCAT start > /dev/null
 }
 
 usage() {
 	#TODO UPDATE MSG
-		echo "     - install"
-		echo "     - truncate"
-		echo "     - update"
-		echo "     - update-fast: build inside dspace dir (compiles only customizations)"
-		echo "     - start"
-		echo "     - start --debug: enable remote debug mode"
-		echo "     - reset-db"
-		exit 1
+	echo "     - install"
+	echo "     - truncate"
+	echo "     - update"
+	echo "     - update-fast: build inside dspace dir (compiles only customizations)"
+	echo "     - start"
+	echo "     - start --debug: enable remote debug mode"
+	echo "     - reset-db"
+	exit 1
 }
 
-just_wait()
+just_wait() 
 {
 	tail -n 10 ${DSPACE_DIR}/log/dspace.log
 	#tail -F /etc/hosts
@@ -305,16 +359,15 @@ just_wait()
 #########################################################
 
 #validates current user be the same as DSPACE_USER
-if [ ! "id ${DSPACE_USER} 2> /dev/null | grep $DSPACE_USER" ]; then
-	print_err "El usuario que está ejecutando este comando no es el usuario predefinido de dspace '$DSPACE_USER', no se permite usar otro usuario para evitar problemas de permisos en el directorio de instalación."
-fi
+id -u ${DSPACE_USER} &>/dev/null || useradd --home-dir $DSPACE_BASE --create-home --shell /bin/bash $DSPACE_USER
 
 cd $DSPACE_BASE
 
-# se hace el "source ~/.bashrc" para importar las cfgs de mirage2
+# se hace el "source ~/.bashrc" para importar las cfgs de mirage2 
 # source ~/.bashrc
 
 init_env
+reset_permissions
 case "$1" in
   	start)
         if [ "$2" = "--debug" ]; then
@@ -324,9 +377,9 @@ case "$1" in
         fi
 		just_wait
 		;;
-	# init_sources)
-		# init_sources
-		# ;;
+	install_mirage2_dependencies)
+		install_mirage2_dependencies
+		;;
   	install)
 		install
 		;;
@@ -337,7 +390,7 @@ case "$1" in
 		update fast
         ;;
     reset-db)
-        reset_db
+        reset_db    
         ;;
   	*)
         usage

@@ -1,31 +1,31 @@
 include .env
 
-.PHONY: up update install down stop prune ps bash logs index-discovery oai dsbin
+.PHONY: up update install down stop prune ps bash logs dsbin
 
 default: up
 
 up:
 	@echo "Starting up containers for $(PROJECT_NAME)..."
-	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml up -d
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml up -d
 
 update:
-	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run --rm dspace update
-	chown -R $(id -u):$(id -g) data/*
+	@echo "Stopping containers for $(PROJECT_NAME)..."
+	@docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml stop
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace update
+	sudo chown -R $(id -u):$(id -g) data/*
+	@echo "Starting up containers for $(PROJECT_NAME)..."
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml up -d
 
 install:
-	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run dspace install
-	chown -R $(id -u):$(id -g) data/*
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace install
+	sudo chown -R $(id -u):$(id -g) data/*
 
 reset-db:
-	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run dspace reset-db
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace reset-db
 
 index-discovery:
 	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'index-discovery' command... In example 'make PARAMS=\"-b\" index-discovery'"...
-	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"index-discovery $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace index-discovery $(PARAMS); echo "Exiting..."; fi
-
-oai:
-	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'oai' command... In example 'make PARAMS=\"import -v\" oai'"...
-	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"oai $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace oai $(PARAMS); echo "Exiting..."; fi
+	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"index-discovery $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace index-discovery "$(PARAMS)"; echo "Exiting..."; fi
 
 dsbin:
 	@echo "[HELP!] Define \"COMMAND\" variable if wants to pass specifics command to 'bin/dspace' DSpace's CLI... In example 'make COMMAND=\"dsprop -p dspace.dir\" dsbin'"...
@@ -37,7 +37,7 @@ down: stop
 
 stop:
 	@echo "Stopping containers for $(PROJECT_NAME)..."
-	@docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml stop
+	@docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml stop
 
 prune:
 	@echo "Removing containers for $(PROJECT_NAME)..."
@@ -47,7 +47,7 @@ ps:
 	@docker ps --filter name='$(PROJECT_NAME)*'
 
 bash:
-	docker exec -i -t '$(PROJECT_NAME)' /bin/bash
+	docker exec -i -t 'dspace_$(PROJECT_NAME)' /bin/bash
 
 logs:
 	@docker-compose logs -f $(filter-out $@,$(MAKECMDGOALS))
