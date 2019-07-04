@@ -159,7 +159,7 @@ reset_db (){
 
 truncate_all (){
 	
-	init_config $INSTALL_CFG_FILENAME
+	init_config $SOURCE_CFG_FILENAME
 	if ( confirm "Esta por borrar el directorio de instalación de dspace $DSPACE_DIR y la base de datos, está seguro que desea hacerlo? [Y/n]" ); then
 		print_info "Hago el clean y migrate de la BD para limpiarla. Si falla al crear el admin es porque el migrate no esta creando el group admin"
 		#TODO check if dspace cmd exists
@@ -193,7 +193,7 @@ rebuild_installer(){
 
 	sudo --login -u $DSPACE_USER <<EOF
 	cd $DSPACE_SOURCE
-source ~/.bashrc
+	source ~/.bashrc
 	# if [[ $1 == "fast" ]]; then
 	# 	cd dspace
 	# fi
@@ -282,7 +282,7 @@ start () {
 		print_err  "El directorio de instalación ${DSPACE_DIR} no existe, debe instalar!"
 	fi
 	
-	init_config $INSTALL_CFG_FILENAME
+	init_config $SOURCE_CFG_FILENAME
 	test_db_connection
 
 	enable_webapps
