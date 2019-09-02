@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: up update install down stop prune ps bash logs index-discovery oai dsbin
+.PHONY: up update install down stop prune ps bash logs index-discovery oai dsbin pgcli
 
 default: up
 
@@ -48,6 +48,10 @@ ps:
 
 bash:
 	docker exec -i -t '$(PROJECT_NAME)' /bin/bash
+
+pgcli:
+	@echo "Password is '${POSTGRES_PASSWORD}'"
+	docker exec -i -t '${DB_HOST}' psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -W
 
 logs:
 	@docker-compose logs -f $(filter-out $@,$(MAKECMDGOALS))
