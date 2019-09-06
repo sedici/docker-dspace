@@ -32,7 +32,7 @@ If you copy it before running the install command then the database will be popu
 ## Remote debug of Tomcat WEBAPPS
 To enable remote tomcat debug of DSpace Webapps, you must run either commands next
 
-```docker-compose up ```
+```make up ```
 
 or
 
