@@ -33,3 +33,8 @@ services:
       - "9090:8080"
     depends_on: 
       - db
+### Configure this option if you want to add this services to an external network...
+networks:
+  default:
+    external:
+      name: ${DOCKER_EXTERNAL_NETWORK_NAME}
