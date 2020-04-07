@@ -1,19 +1,10 @@
 version: "3"
-services:
-  db:
-    container_name: ${DB_HOST}
-  dspace:
-    image: dspace:cicba
-    container_name: cicba
-    environment:
-      DSPACE_GIT_URL: "https://github.com/CICBA/DSpace"
-      DSPACE_GIT_REVISION: "master"
-      DSPACE_WEBAPPS: "xmlui oai sword"
-      POSTGRES_DB_HOST: ${DB_HOST}
-  pgadmin4:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: "user@dspace.com"
-      PGADMIN_DEFAULT_PASSWORD: "dspace"
-    ports:
-      - "80:80"
+#services:
+#  pgadmin4:
+#     image: dpage/pgadmin4
+#     environment:
+#       PGADMIN_DEFAULT_EMAIL: "user@dspace.com"
+#       PGADMIN_DEFAULT_PASSWORD: "dspace"
+#     restart: unless-stopped
+#     ports:
+#       - "80:80"
