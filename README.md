@@ -12,8 +12,8 @@ DSpace instant development environment using Docker Compose
 3. > mkdir data/source
 4. > git clone [dspace source  remote git repo] data/source
 5. > Modify .env file
-6. > make up
-7. > make install
+6. > make install
+7. > make up
 8. > Access http://localhost:9090/
 
 ## Making changes in dev
