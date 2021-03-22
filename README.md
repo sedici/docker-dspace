@@ -9,10 +9,12 @@ DSpace instant development environment using Docker Compose
 ## Installation
 1. > git clone https://github.com/sedici/dspace-docker/
 2. > cd dspace-docker
-3. > docker-compose build
-4. > docker-compose run dspace install
-5. > docker-compose up
-6. > Access http://localhost:9090/
+3. > mkdir data/source
+4. > git clone [dspace source  remote git repo] data/source
+5. > Modify .env file
+6. > make up
+7. > make install
+8. > Access http://localhost:9090/
 
 ## Making changes in dev
 1. change ```data/dspace-6/sources/*``` as desired
