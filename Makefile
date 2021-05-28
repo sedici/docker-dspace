@@ -41,7 +41,7 @@ stop:
 
 prune:
 	@echo "Removing containers for $(PROJECT_NAME)..."
-	@docker-compose down -v
+	@docker-compose -f docker-compose.yml -f others/docker-compose-other.yml down -v
 
 ps:
 	@docker ps --filter name='$(PROJECT_NAME)*'
