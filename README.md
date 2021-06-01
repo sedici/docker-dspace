@@ -58,6 +58,17 @@ The test will wait for Eclipse to connect.
 
 Open the Debug Configuration in Eclipse and set up a remote application on port 5005. Run the configuration. The test will resume. You can use break points and all the usual features of Eclipse debugging.
 
+## Up with a Varnish
+  First copy your varnish configuration file in ***data*** directory, name it ***varnish.vcl***, and change backend connections to be like this:
+  ```
+    .host = "sedici";
+    .port = "8080";
+  ```
+  Then, just run  ```make up-with-varnish``` to set up a Varnish cache proxy in 8080 port.
+  You can choose to access SEDICI through Varnish in 8080 port or in 9090 for direct access.
+
+  ```make down-with-varnish``` to stop containers
+
 ## TODO
   - set tomcat Xmx, Xms, and more in setenv.sh
   - Mirar https://github.com/docker-library/official-images#library-definition-files 
