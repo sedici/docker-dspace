@@ -1,0 +1,13 @@
+version: "3"
+services:
+  varnish:
+    container_name: varnish_sedici
+    image: varnish:6.0
+    environment:
+      VARNISH_SIZE: "200MB"
+    tmpfs:
+      - /var/lib/varnish:exec
+    volumes:
+      - ./data/varnish.vcl:/etc/varnish/default.vcl:ro
+    ports:
+      - "8080:80"
