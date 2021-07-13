@@ -1,0 +1,19 @@
+version: "3"
+services:
+  dspace:
+    networks:
+      default: {}
+
+  db:
+    networks:
+      default: {}
+
+  pgadmin4:
+    networks:
+      default: {}
+    
+
+networks:
+  default:
+    external:
+      name: landoproxyhyperion5000gandalfedition_edge

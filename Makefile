@@ -6,22 +6,20 @@ default: up
 
 up:
 	@echo "Starting up containers for $(PROJECT_NAME)..."
-	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml up -d
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml -f others/docker-compose-drupal.yml up -d
 
 update:
-	@echo "Stopping containers for $(PROJECT_NAME)..."
-	@docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml stop
-	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace update
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml -f others/docker-compose-drupal.yml run dspace update
 	sudo chown -R $(id -u):$(id -g) data/*
 	@echo "Starting up containers for $(PROJECT_NAME)..."
 	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml up -d
 
 install:
-	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace install
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml -f others/docker-compose-drupal.yml -f others/docker-compose-drupal.yml run dspace install
 	sudo chown -R $(id -u):$(id -g) data/*
 
 reset-db:
-	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace reset-db
+	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml -f others/docker-compose-drupal.yml run dspace reset-db
 
 index-discovery:
 	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'index-discovery' command... In example 'make PARAMS=\"-b\" index-discovery'"...

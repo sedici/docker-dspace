@@ -18,4 +18,4 @@ services:
       PGADMIN_DEFAULT_EMAIL: "user@dspace.com"
       PGADMIN_DEFAULT_PASSWORD: "dspace"
     ports:
-      - "80:80"
+      - "81:80"
