@@ -24,8 +24,8 @@ reset-db:
 	docker-compose -f docker-compose.yml -f others/docker-compose-debug.yml run dspace reset-db
 
 index-discovery:
-	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'index-discovery' command... In example 'make PARAMS=\"-b\" index-discovery'"...
-	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"index-discovery $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace index-discovery "$(PARAMS)"; echo "Exiting..."; fi
+	@echo "[HELP] pass specifics parameters to 'index-discovery' command... In example 'make index-discovery -b'"...
+	docker-compose exec dspace  /dspace/install/bin/dspace index-discovery $(filter-out $@,$(MAKECMDGOALS))
 
 dsbin:
 	@echo "[HELP!] Define \"COMMAND\" variable if wants to pass specifics command to 'bin/dspace' DSpace's CLI... In example 'make COMMAND=\"dsprop -p dspace.dir\" dsbin'"...

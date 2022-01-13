@@ -205,7 +205,7 @@ rebuild_installer(){
 	if [ ! -z "$DSPACE_WEBAPPS" ]
 	then 
 		[[ $DSPACE_WEBAPPS != *"jspui"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-jspui"
-		[[ $DSPACE_WEBAPPS != *"xmlui"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui"
+		[[ $DSPACE_WEBAPPS != *"xmlui"* ]] && [[ $DSPACE_WEBAPPS != *"mirage2"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui"
 		# if mirage2 is enabled use mirage2 settings, else disable mirage2 profile
 		[[ $DSPACE_WEBAPPS = *"mirage2"* ]] && MAVEN_OPTS="$MAVEN_OPTS -Dmirage2.on=true -Dmirage2.deps.included=false" || MAVEN_OPTS="$MAVEN_OPTS -P-dspace-xmlui-mirage2"
 		[[ $DSPACE_WEBAPPS != *"sword"* ]] && MAVEN_OPTS="$MAVEN_OPTS -P-dspace-sword"
@@ -267,39 +267,7 @@ enable_webapps(){
 }
 
 install_mirage2_dependencies(){
-	# Esta funcion podría invocarse automaticamente cuando  $DSPACE_WEBAPPS = *"mirage2"* y no están instaladas. 
-	# [[ $DSPACE_WEBAPPS = *"mirage2"* ]] && not_installed && install_mirage2_dependencies
-
-	#mkdir /etc/sudoers.d
-	echo "${DSPACE_USER} ALL= NOPASSWD:ALL" > /etc/sudoers.d/rvm
-
-	#Mirage dependencies
-	su --login $DSPACE_USER  <<EOF
-touch ~/.bash_profile ~/.bashrc
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
-# curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.31.7/install.sh | bash
-source ~/.bashrc
-
-nvm install 6.5.0
-nvm alias default 6.5.0
-npm install -g bower
-npm install -g grunt
-npm install -g grunt-cli
-
-command curl -sSL https://rvm.io/mpapis.asc | gpg --import -
-command curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -
-curl -sSL https://get.rvm.io | bash -s stable --auto-dotfiles
-source /dspace/.rvm/scripts/rvm
-
-rvm pkg install libyaml
-rvm install ruby --default
-source ~/.bashrc
-
-gem install sass -v 3.3.14 --no-document
-gem install compass -v 1.0.1 --no-document
-
-EOF
-	rm  /etc/sudoers.d/rvm
+    /usr/local/sbin/install_mirage2_dependencies.sh
 }
 #########################################################
 #########################################################
@@ -334,6 +302,8 @@ install (){
 		init_sources
 	fi
 
+	#TODO add checks for rvm and nvm  in case
+	[[ $DSPACE_WEBAPPS = *"mirage2"* ]] && install_mirage2_dependencies
 
 	rebuild_installer
 

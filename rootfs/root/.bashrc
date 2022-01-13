@@ -1,11 +1,7 @@
 # Display banner
-if [ -f "$HOME/.banner" ]; then
-   cat "$HOME/.banner"
-fi
+[ -f "$HOME/.banner" ] && cat "$HOME/.banner"
 
 # Display build message
-if [ -f "$HOME/.built" ]; then
-   cat "$HOME/.built"
-fi
+[ -f "$HOME/.built" ] && cat "$HOME/.built"
 
 export PS1="\[\e[32;1m\]\u@\w > \[\e[0m\]"
