@@ -220,14 +220,11 @@ rebuild_installer(){
 
 	sudo --login -u $DSPACE_USER <<EOF
 	cd $DSPACE_SOURCE
-source ~/.bashrc
+	source ~/.bashrc
 	# if [[ $1 == "fast" ]]; then
 	# 	cd dspace
 	# fi
 	# git config --global url.https://github.com/.insteadOf git://github.com/
-
-
-	# echo ejecuto `whoami` mvn package $MAVEN_OPTS
 
 	mvn package $MAVEN_OPTS
 
