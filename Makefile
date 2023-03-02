@@ -27,6 +27,9 @@ index-discovery:
 	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'index-discovery' command... In example 'make PARAMS=\"-b\" index-discovery'"...
 	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"index-discovery $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace index-discovery $(PARAMS); echo "Exiting..."; fi
 
+create-administrator:
+	@docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace create-administrator
+
 oai:
 	@echo "[HELP!] Define \"PARAMS\" variable if wants to pass specifics parameters to 'oai' command... In example 'make PARAMS=\"import -v\" oai'"...
 	@if [ -f "data/install/bin/dspace" ]; then echo "Running \"oai $(PARAMS)\"..."; docker exec -it $(PROJECT_NAME) /dspace/install/bin/dspace oai $(PARAMS); echo "Exiting..."; fi
