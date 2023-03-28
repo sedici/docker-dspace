@@ -7,10 +7,12 @@ services:
       POSTGRES_DB: "dspace"
       POSTGRES_USER: "dspace"
       POSTGRES_PASSWORD: "dspace"
+    restart: always
     volumes:
       - /var/lib/postgresql/data
   dspace:
     container_name: dspace
+    restart: always
     image: dspace:dspace-5.8
     build:
       context: ./
