@@ -29,6 +29,8 @@ ENV BOOTSTRAP_DUMP "${DSPACE_BASE}/bootstrap-dump.sql"
 #workaround for https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=866729
 RUN mkdir -p /usr/share/man/man1 /usr/share/man/man7
 
+COPY /rootfs/etc/sources.list /etc/apt/sources.list
+
 RUN apt-get update && apt-get -y upgrade
 RUN apt-get install -y --no-install-recommends  git openjdk-8-jdk ant maven postgresql-client  
 	#imagemagick ghostscript \
