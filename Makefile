@@ -12,6 +12,10 @@ up-with-varnish:
 	@echo "Starting up containers for $(PROJECT_NAME)... with varnish on 8080"
 	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml -f others/docker-compose-varnish.yml up -d
 
+up-with-ssl:
+	@echo "Starting up containers for $(PROJECT_NAME)..."
+	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml -f others/docker-compose-ssl.yml up -d
+
 update:
 	docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml run --rm dspace update
 	chown -R $(id -u):$(id -g) data/*
@@ -49,6 +53,10 @@ stop:
 down-with-varnish:
 	@echo "Stopping containers for $(PROJECT_NAME)..."
 	@docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml -f others/docker-compose-varnish.yml stop
+
+down-with-ssl:
+	@echo "Stopping containers for $(PROJECT_NAME)..."
+	@docker-compose -f docker-compose.yml -f docker-compose-debug.yml -f others/docker-compose-other.yml -f others/docker-compose-ssl.yml stop
 
 prune:
 	@echo "Removing containers for $(PROJECT_NAME)..."

@@ -1,0 +1,15 @@
+version: '3'
+services:
+  nginx-proxy:
+    container_name: mi_nginx_proxy
+    image: nginx:latest
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/custom.conf:ro
+      - ./ssl:/etc/nginx/ssl # Monta la carpeta que contiene los archivos de certificado
+    depends_on:
+      - dspace
+    command: ["sh", "-c", "openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout /etc/nginx/ssl/tu_certificado.key -out /etc/nginx/ssl/tu_certificado.crt -subj '/C=AR/ST=Buenos Aires/L=La Plata/O=SEDICI/OU=IT/CN=SEDICI' && nginx -g 'daemon off;'"] # Crea los certificados autofirmados y los guarda en la carpeta
